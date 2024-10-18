@@ -1,0 +1,233 @@
+-- 1. Sales Performance Insights
+-- a) Top-selling Products and Categories
+
+-- Q1) What is the total revenue generated?
+
+SELECT SUM(TOTAL_PRICE) AS TOTAL_REVENUE FROM ELECTRONICS_SALES;
+TOTAL_REVENUE    
+58521578.109997064
+
+--Q2)What is the monthly breakdown of sales?
+
+SELECT DATE_TRUNC('MONTH',PURCHASE_DATE) AS MONTH,
+SUM(TOTAL_PRICE) AS REVENUE_PER_MONTH FROM ELECTRONICS_SALES
+GROUP BY 1
+ORDER BY 1;
+"month"                        "revenue_per_month"
+
+"2023-09-01 00:00:00+05:30"	481961.79000000056
+"2023-10-01 00:00:00+05:30"	2318466.349999999
+"2023-11-01 00:00:00+05:30"	2068434.1399999969
+"2023-12-01 00:00:00+05:30"	1980700.3299999984
+"2024-01-01 00:00:00+05:30"	6001020.489999997
+"2024-02-01 00:00:00+05:30"	5372749.099999997
+"2024-03-01 00:00:00+05:30"	5639074.8400000045
+"2024-04-01 00:00:00+05:30"	5743905.710000012
+"2024-05-01 00:00:00+05:30"	6173917.860000006
+"2024-06-01 00:00:00+05:30"	6071590.6000000145
+"2024-07-01 00:00:00+05:30"	6004135.610000019
+"2024-08-01 00:00:00+05:30"	6110175.959999991
+"2024-09-01 00:00:00+05:30"	4555445.329999997
+
+--Q3)Which product type generated the highest revenue?
+
+SELECT PRODUCT_TYPE,SUM(TOTAL_PRICE) AS TOTAL_REVENUE_OF_PRODUCT
+FROM ELECTRONICS_SALES
+GROUP BY 1 
+ORDER BY 2;
+"product_type"	"total_revenue_of_product"
+
+"Headphones"	3967358.339999995
+"Tablet"	11410018.970000116
+"Laptop"	12057530.690000003
+"Smartwatch"	13926912.060000103
+"Smartphone"	17159758.049999706  
+
+--Q4)What is the average order value (AOV)?
+
+SELECT AVG(TOTAL_PRICE) AS AVG_ORDERVALUE FROM ELECTRONICS_SALES;
+
+"avg_ordervalue"
+3020.7803701025687
+
+--Q5)Write top 10 customers who made the most purchases?
+
+ SELECT customer_id, COUNT(*) AS total_orders
+FROM electronics_sales
+GROUP BY customer_id
+ORDER BY total_orders DESC
+LIMIT 10;
+
+"id"  "total_orders"
+18304	7
+16357	7
+4224	6
+5948	6
+12616	6
+2556	6
+17946	6
+19996	6
+2238	6
+2447	6
+
+--Q4)Find the avg age of customers?
+
+SELECT AVG(AGE) AVG_AGE FROM ELECTRONICS_SALES;
+
+"avg_age"
+48.9807463996283487
+
+--Q7)Which shipping methods are used the most?
+
+SELECT SHIPPING_TYPE,COUNT(*) AS TOP_USED_SHIPPING FROM ELECTRONICS_SALES
+GROUP BY 1
+ORDER BY 2 DESC;
+
+"shipping_type"	"top_used_shipping"
+"Standard"	6522
+"Express"	3366
+"Overnight"	3357
+"Expedited"	3072
+"Same Day"	3056
+
+--Q8)Which shipping method has the highest cancellation rate?
+
+SELECT shipping_type, 
+       COUNT(*) FILTER (WHERE order_status = 'Cancelled') * 100.0 / COUNT(*) AS cancel_rate
+FROM electronics_sales
+GROUP BY shipping_type
+ORDER BY cancel_rate DESC;
+
+"shipping_type"	"cancel_rate"
+"Express"	33.8383838383838384
+"Overnight"	33.0652368185880250
+"Same Day"	33.0170157068062827
+"Standard"	32.4440355719104569
+"Expedited"	32.3567708333333333
+
+--Q9)What are the trends in cancelled orders over time?
+
+SELECT DATE_TRUNC('month', purchase_date) AS month, COUNT(*) AS cancelled_orders
+FROM electronics_sales
+WHERE order_status = 'Cancelled'
+GROUP BY month
+ORDER BY month;
+
+       "month"   	    "cancelled_orders"
+
+"2023-09-01 00:00:00+05:30"	66
+"2023-10-01 00:00:00+05:30"	298
+"2023-11-01 00:00:00+05:30"	260
+"2023-12-01 00:00:00+05:30"	275
+"2024-01-01 00:00:00+05:30"	627
+"2024-02-01 00:00:00+05:30"	576
+"2024-03-01 00:00:00+05:30"	613
+"2024-04-01 00:00:00+05:30"	624
+"2024-05-01 00:00:00+05:30"	653
+"2024-06-01 00:00:00+05:30"	629
+"2024-07-01 00:00:00+05:30"	604
+"2024-08-01 00:00:00+05:30"	668
+"2024-09-01 00:00:00+05:30"	475
+
+--Q10)How many purchases did loyalty members make compared to non-members?
+
+SELECT LOYALTY_MEMBER, SUM(TOTAL_PRICE),COUNT(*) 
+FROM ELECTRONICS_SALES
+GROUP BY 1
+ORDER BY 2;
+
+"loyalty_member"	"sum"	      "count"
+
+"Yes"	        12629103.48999997	4221
+"No"	        45892474.619999304	15152
+
+
+--Q13)Which product has the highest average rating?
+
+SELECT PRODUCT_TYPE ,AVG(rating) as AVG_RATING
+FROM ELECTRONICS_SALES
+GROUP BY 1
+ORDER BY 2 DESC;
+
+"product_type"	"avg_rating"
+"Smartphone"	3.3437106352348389
+"Tablet"	3.0195399455849617
+"Smartwatch"	2.9964001028542042
+"Headphones"	2.9853015712113533
+"Laptop"	2.9836358987471235
+
+
+--Q14)What is the average rating given by loyalty members versus non-members?
+
+SELECT 
+    loyalty_member, 
+    AVG(rating) AS avg_rating
+FROM electronics_sales
+WHERE rating IS NOT NULL
+GROUP BY loyalty_member;
+
+"loyalty_member"	"avg_rating"
+"No"	           3.0949709609292503
+"Yes"	           3.1049514333096423
+
+--Q15)How does average rating affect sales volume?
+
+SELECT 
+    CASE 
+        WHEN rating < 3 THEN '1-2 Stars'
+        WHEN rating = 3 THEN '3 Stars'
+        WHEN rating > 3 THEN '4-5 Stars'
+    END AS rating_range,
+    COUNT(*) AS sales_volume
+FROM electronics_sales
+WHERE rating IS NOT NULL
+GROUP BY rating_range;
+
+  "rating_range"	"sales_volume"
+   "4-5 Stars"	           5758
+   "1-2 Stars"	           5780
+    "3 Stars"	           7835
+
+--Q16)What is the average order value (AOV) for highly rated products?
+
+SELECT AVG(TOTAL_PRICE) AS AVG_ORDER_VALUE
+FROM ELECTRONICS_SALES
+WHERE RATING >=4;
+
+"avg_order_value"
+2339.1457103160797
+
+--Q17)What is the total revenue generated by each payment method?
+
+SELECT PAYMENT_METHOD, SUM(TOTAL_PRICE) AS TOTAL_REVENUE 
+FROM ELECTRONICS_SALES
+GROUP BY 1
+ORDER BY 2 DESC;
+
+"payment_method" "total_revenue"
+
+"Credit Card"	17221180.93999994
+"Bank Transfer"	11037735.999999993
+"PayPal"	10772090.720000034
+"Debit Card"	6736217.539999951
+"Paypal"	6498781.079999958
+"Cash"	        6255571.829999958
+
+--Q18)Which payment methods are associated with the highest cancellation rates?
+
+SELECT payment_method, 
+       COUNT(*) FILTER (WHERE ORDER_status = 'Cancelled') * 100.0 / COUNT(*) AS cancellation_rate
+FROM electronics_sales
+GROUP BY payment_method
+ORDER BY cancellation_rate DESC;
+
+"payment_method"   "cancellation_rate"
+
+"Paypal"	35.2426412092283214
+"Credit Card"	33.6278494433645520
+"Bank Transfer"	33.0066392665191274
+"PayPal"	31.9778789850357840
+"Debit Card"	31.8494536624848240
+"Cash"	        30.6982343499197432
+
+--END--
